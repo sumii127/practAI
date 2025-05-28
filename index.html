@@ -5,16 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Clock</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="themes.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="controls-container">
-        <div class="toggle-container">
-            <label class="switch">
-                <input type="checkbox" id="clock-toggle">
-                <span class="slider round"></span>
-            </label>
-            <span>Digital / Analog</span>
+        <div id="inline-controls-group">
+            <div class="toggle-container">
+                <label class="switch">
+                    <input type="checkbox" id="clock-toggle">
+                    <span class="slider round"></span>
+                </label>
+                <span>Analog / Digital</span>
+            </div>
+            <!-- Theme button will be dynamically added here by theme-selector.js -->
         </div>
         <div class="timezone-selector">
             <label for="timezone">Timezone:</label>
@@ -117,5 +121,6 @@
     </div>
 
     <script src="script.js"></script>
+    <script src="theme-selector.js"></script>
 </body>
 </html> 
