@@ -10,15 +10,12 @@
 </head>
 <body>
     <div class="controls-container">
-        <div id="inline-controls-group">
-            <div class="toggle-container">
-                <label class="switch">
-                    <input type="checkbox" id="clock-toggle">
-                    <span class="slider round"></span>
-                </label>
-                <span>Analog / Digital</span>
-            </div>
-            <!-- Theme button will be dynamically added here by theme-selector.js -->
+        <div class="toggle-container">
+            <label class="switch">
+                <input type="checkbox" id="clock-toggle">
+                <span class="slider round"></span>
+            </label>
+            <span>Analog / Digital</span>
         </div>
         <div class="timezone-selector">
             <label for="timezone">Timezone:</label>
@@ -35,10 +32,47 @@
                 <option value="Australia/Sydney">Sydney (AEST/AEDT)</option>
             </select>
         </div>
+        <div class="mode-selector">
+            <button id="clock-mode" class="mode-btn active">Clock</button>
+            <button id="timer-mode" class="mode-btn">Timer</button>
+        </div>
     </div>
 
     <div id="clocks-container">
         <!-- Clocks will be added here by JavaScript -->
+    </div>
+
+    <div id="timer-container" style="display: none;">
+        <div class="timer-wrapper">
+            <div class="timer-display">00:00:00</div>
+            <div class="timer-controls">
+                <div class="timer-input-group">
+                    <div class="timer-input">
+                        <label for="hours">Hours</label>
+                        <input type="number" id="hours" min="0" max="23" value="0">
+                    </div>
+                    <div class="timer-input">
+                        <label for="minutes">Minutes</label>
+                        <input type="number" id="minutes" min="0" max="59" value="0">
+                    </div>
+                    <div class="timer-input">
+                        <label for="seconds">Seconds</label>
+                        <input type="number" id="seconds" min="0" max="59" value="0">
+                    </div>
+                </div>
+                <div class="timer-buttons">
+                    <button id="timer-start" class="timer-btn">Start</button>
+                    <button id="timer-pause" class="timer-btn" disabled>Pause</button>
+                    <button id="timer-reset" class="timer-btn" disabled>Reset</button>
+                </div>
+            </div>
+            <div class="timer-customization">
+                <div class="color-picker">
+                    <label for="timer-color">Timer Color:</label>
+                    <input type="color" id="timer-color" value="#2196F3">
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="analog-clock-template" style="display: none;">

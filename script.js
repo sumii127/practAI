@@ -1,13 +1,37 @@
 // DOM Elements
 const clocksContainer = document.getElementById('clocks-container');
+const timerContainer = document.getElementById('timer-container');
 const clockTemplate = document.getElementById('analog-clock-template');
 const timezoneSelect = document.getElementById('timezone');
 const clockToggle = document.getElementById('clock-toggle');
 
+// Mode buttons
+const clockModeBtn = document.getElementById('clock-mode');
+const timerModeBtn = document.getElementById('timer-mode');
+
+// Timer elements
+const timerDisplay = document.querySelector('.timer-display');
+const hoursInput = document.getElementById('hours');
+const minutesInput = document.getElementById('minutes');
+const secondsInput = document.getElementById('seconds');
+const startBtn = document.getElementById('timer-start');
+const pauseBtn = document.getElementById('timer-pause');
+const resetBtn = document.getElementById('timer-reset');
+const timerColorPicker = document.getElementById('timer-color');
+
 // State
 let clocks = [];
+let currentTimezone = 'local';
 let isAnalogView = false;
-let intervalId = null;
+let clockIntervalId = null;
+let timerIntervalId = null;
+let clockElement = null; // The main clock element
+let currentMode = 'clock'; // 'clock' or 'timer'
+let timerRunning = false;
+let timerPaused = false;
+let timerEndTime = 0;
+let timerRemainingTime = 0;
+let timerColor = '#2196F3';
 
 // Timezone data with display names
 const timezoneData = [
@@ -276,6 +300,171 @@ function toggleView() {
     updateClocks();
 }
 
+// Switch between clock and timer modes
+function switchMode(mode) {
+    if (mode === currentMode) return;
+    
+    currentMode = mode;
+    
+    // Update mode buttons
+    if (clockModeBtn) clockModeBtn.classList.toggle('active', mode === 'clock');
+    if (timerModeBtn) timerModeBtn.classList.toggle('active', mode === 'timer');
+    
+    // Show/hide containers
+    if (clocksContainer) clocksContainer.style.display = mode === 'clock' ? 'flex' : 'none';
+    if (timerContainer) timerContainer.style.display = mode === 'timer' ? 'flex' : 'none';
+    
+    // Start/stop appropriate intervals
+    if (mode === 'clock') {
+        // Start clock updates
+        if (!clockIntervalId) {
+            clockIntervalId = setInterval(updateClocks, 1000);
+            updateClocks();
+        }
+    } else {
+        // Stop clock updates to save resources
+        if (clockIntervalId) {
+            clearInterval(clockIntervalId);
+            clockIntervalId = null;
+        }
+    }
+}
+
+// Timer functions
+function startTimer() {
+    if (timerRunning && !timerPaused) return;
+    
+    const hours = parseInt(hoursInput.value) || 0;
+    const minutes = parseInt(minutesInput.value) || 0;
+    const seconds = parseInt(secondsInput.value) || 0;
+    
+    // Don't start if all values are zero
+    if (hours === 0 && minutes === 0 && seconds === 0) return;
+    
+    if (timerPaused) {
+        // Resume from paused state
+        timerEndTime = Date.now() + timerRemainingTime;
+        timerPaused = false;
+    } else {
+        // Start new timer
+        const totalMilliseconds = (hours * 3600 + minutes * 60 + seconds) * 1000;
+        timerEndTime = Date.now() + totalMilliseconds;
+        timerRemainingTime = totalMilliseconds;
+    }
+    
+    timerRunning = true;
+    updateTimerButtons();
+    
+    // Clear any existing interval
+    if (timerIntervalId) clearInterval(timerIntervalId);
+    
+    // Start timer update interval
+    timerIntervalId = setInterval(updateTimerDisplay, 100);
+}
+
+function pauseTimer() {
+    if (!timerRunning || timerPaused) return;
+    
+    timerPaused = true;
+    timerRemainingTime = timerEndTime - Date.now();
+    if (timerRemainingTime < 0) timerRemainingTime = 0;
+    
+    updateTimerButtons();
+    
+    // Clear interval
+    if (timerIntervalId) {
+        clearInterval(timerIntervalId);
+        timerIntervalId = null;
+    }
+}
+
+function resetTimer() {
+    timerRunning = false;
+    timerPaused = false;
+    timerRemainingTime = 0;
+    
+    // Clear interval
+    if (timerIntervalId) {
+        clearInterval(timerIntervalId);
+        timerIntervalId = null;
+    }
+    
+    // Reset input fields if they exist
+    if (hoursInput) hoursInput.value = 0;
+    if (minutesInput) minutesInput.value = 0;
+    if (secondsInput) secondsInput.value = 0;
+    
+    // Reset display
+    if (timerDisplay) {
+        timerDisplay.textContent = '00:00:00';
+        timerDisplay.style.color = timerColor;
+    }
+    
+    updateTimerButtons();
+}
+
+function updateTimerDisplay() {
+    if (!timerRunning || !timerDisplay) return;
+    
+    const now = Date.now();
+    const timeLeft = timerPaused ? timerRemainingTime : timerEndTime - now;
+    
+    if (timeLeft <= 0) {
+        // Timer finished
+        timerDisplay.textContent = '00:00:00';
+        timerDisplay.style.color = '#FF0000'; // Red color when finished
+        timerRunning = false;
+        
+        // Clear interval
+        if (timerIntervalId) {
+            clearInterval(timerIntervalId);
+            timerIntervalId = null;
+        }
+        
+        updateTimerButtons();
+        return;
+    }
+    
+    // Calculate time components
+    const totalSeconds = Math.floor(timeLeft / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    
+    // Format display
+    timerDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function updateTimerButtons() {
+    if (!startBtn || !pauseBtn || !resetBtn) return;
+    
+    if (timerRunning) {
+        if (timerPaused) {
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resetBtn.disabled = false;
+        } else {
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            resetBtn.disabled = false;
+        }
+    } else {
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        resetBtn.disabled = true;
+    }
+}
+
+function setTimerColor(color) {
+    timerColor = color;
+    if (timerDisplay) {
+        // Only update color if timer is not finished (not red)
+        if (!timerRunning || timerDisplay.style.color !== 'rgb(255, 0, 0)') {
+            timerDisplay.style.color = color;
+        }
+    }
+}
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize timezone select
@@ -286,33 +475,54 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Set up event listeners
     if (clockToggle) {
-        clockToggle.addEventListener('change', () => {
-            toggleView();
+        clockToggle.addEventListener('change', toggleView);
+    }
+    
+    // Mode switching
+    if (clockModeBtn) {
+        clockModeBtn.addEventListener('click', () => switchMode('clock'));
+    }
+    
+    if (timerModeBtn) {
+        timerModeBtn.addEventListener('click', () => switchMode('timer'));
+    }
+    
+    // Timer controls
+    if (startBtn) {
+        startBtn.addEventListener('click', startTimer);
+    }
+    
+    if (pauseBtn) {
+        pauseBtn.addEventListener('click', pauseTimer);
+    }
+    
+    if (resetBtn) {
+        resetBtn.addEventListener('click', resetTimer);
+    }
+    
+    // Timer color picker
+    if (timerColorPicker) {
+        // Set initial color
+        timerColor = timerColorPicker.value;
+        
+        timerColorPicker.addEventListener('input', () => {
+            setTimerColor(timerColorPicker.value);
         });
     }
     
-    // Add timezone button
-    const addButton = document.createElement('button');
-    addButton.textContent = 'Add Timezone';
-    addButton.className = 'add-timezone';
-    addButton.addEventListener('click', () => {
-        if (timezoneSelect && timezoneSelect.value) {
-            addClock(timezoneSelect.value);
-        }
-    });
-    
-    // Add the button after the timezone select
-    if (timezoneSelect && timezoneSelect.parentNode) {
-        timezoneSelect.parentNode.appendChild(addButton);
-    }
-    
     // Start the clock updates
-    if (intervalId) clearInterval(intervalId);
-    intervalId = setInterval(updateClocks, 1000);
+    if (clockIntervalId) clearInterval(clockIntervalId);
+    clockIntervalId = setInterval(updateClocks, 1000);
     
     // Initial update
     updateClocks();
     toggleView();
+    
+    // Initialize timer buttons
+    updateTimerButtons();
+    
+    // Set initial mode
+    switchMode('clock');
 });
 
 // Add some styles for the add button
