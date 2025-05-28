@@ -1,11 +1,22 @@
-body, html {
+html {
     height: 100%;
     margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f0f0f0;
+    background-color: var(--bg-color, #f0f0f0); /* Theme background on HTML */
+    transition: background-color 0.5s; /* Transition for background */
+}
+
+body {
+    min-height: 100%; /* Body takes at least full height of HTML */
+    margin: 0;
     font-family: 'Arial', sans-serif;
+    color: var(--text-color, #333);
+    display: flex; /* For centering main content block */
+    flex-direction: column; /* Stack potential multiple main children */
+    align-items: center; /* Center #clocks-container horizontally */
+    justify-content: center; /* Center #clocks-container vertically */
+    transition: color 0.5s; /* Transition for text color */
+    padding-top: 60px; /* Add some padding so content isn't under fixed controls */
+    box-sizing: border-box; /* Ensure padding doesn't increase overall size beyond 100% */
 }
 
 /* Clocks Container */
@@ -19,16 +30,16 @@ body, html {
     padding: 20px;
     width: 100%;
     max-width: 1400px;
-    margin: 20px auto;
+    margin: 0 auto; /* Centering horizontally, vertical margin handled by body flex */
     min-height: 300px;
 }
 
 .clock-wrapper {
-    background: white;
+    background: var(--clock-bg-color, white);
     border-radius: 15px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.5s;
 }
 
 .clock-wrapper:hover {
@@ -37,12 +48,13 @@ body, html {
 }
 
 .clock-header {
-    background: #2196F3;
-    color: white;
+    background: var(--button-bg-color, #2196F3);
+    color: var(--button-text-color, white);
     padding: 10px 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: background-color 0.5s, color 0.5s;
 }
 
 .clock-header .timezone-name {
@@ -53,7 +65,7 @@ body, html {
 .remove-clock {
     background: rgba(255, 255, 255, 0.2);
     border: none;
-    color: white;
+    color: var(--button-text-color, white);
     width: 24px;
     height: 24px;
     border-radius: 50%;
@@ -79,8 +91,9 @@ body, html {
     font-size: 2.5em;
     font-family: 'Orbitron', 'Courier New', Courier, monospace;
     margin-bottom: 20px;
-    color: #333;
+    color: var(--digital-clock-text-color, #333);
     font-weight: bold;
+    transition: color 0.5s;
 }
 
 .analog-clock {
@@ -88,10 +101,11 @@ body, html {
     width: 200px;
     height: 200px;
     margin: 0 auto;
-    border: 8px solid #333;
+    border: 8px solid var(--clock-border-color, #333);
     border-radius: 50%;
-    background: white;
+    background: var(--clock-bg-color, white);
     box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.5s, background-color 0.5s;
 }
 
 /* Analog clock hands */
@@ -100,13 +114,13 @@ body, html {
     top: 50%;
     left: 50%;
     transform-origin: 0% 50%;
-    transition: transform 0.1s cubic-bezier(0.4, 2.3, 0.5, 1);
+    transition: transform 0.1s cubic-bezier(0.4, 2.3, 0.5, 1), background-color 0.5s;
 }
 
 .analog-clock .hour-hand {
     width: 40%;
     height: 8px;
-    background: #333;
+    background: var(--analog-hand-hour-color, #333);
     margin-top: -4px;
     z-index: 3;
 }
@@ -114,7 +128,7 @@ body, html {
 .analog-clock .minute-hand {
     width: 45%;
     height: 5px;
-    background: #666;
+    background: var(--analog-hand-minute-color, #666);
     margin-top: -2.5px;
     z-index: 2;
 }
@@ -122,7 +136,7 @@ body, html {
 .analog-clock .second-hand {
     width: 48%;
     height: 2px;
-    background: #f00;
+    background: var(--analog-hand-second-color, #f00);
     margin-top: -1px;
     z-index: 1;
 }
@@ -130,25 +144,40 @@ body, html {
 .analog-clock .center-dot {
     width: 12px;
     height: 12px;
-    background: #f00;
-    border: 2px solid white;
+    background: var(--analog-center-dot-color, #f00);
+    border: 2px solid var(--clock-bg-color, white);
     border-radius: 50%;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 4;
+    transition: background-color 0.5s, border-color 0.5s;
 }
 
 /* Controls Container */
 .controls-container {
-    position: absolute;
+    position: fixed;
     top: 20px;
     right: 20px;
     display: flex;
     flex-direction: column;
     gap: 15px;
     align-items: flex-end;
+    background-color: var(--controls-bg-color, rgba(255, 255, 255, 0.8));
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+    transition: background-color 0.5s;
+}
+
+/* New group for side-by-side controls */
+#inline-controls-group {
+    display: flex;
+    flex-direction: row; /* Arrange children (toggle, theme button) side-by-side */
+    align-items: center; /* Vertically align them nicely */
+    gap: 10px; /* Space between the toggle and theme button */
 }
 
 /* Toggle Switch Styles */
@@ -161,41 +190,46 @@ body, html {
 .toggle-container span {
     margin-left: 10px;
     font-size: 1em;
+    color: var(--controls-text-color, #333);
+    transition: color 0.5s;
 }
 
 .timezone-selector {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: white;
+    background: var(--controls-bg-color, white);
     padding: 8px 12px;
     border-radius: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.5s;
 }
 
 .timezone-selector label {
     font-size: 0.9em;
-    color: #555;
+    color: var(--controls-text-color, #555);
     white-space: nowrap;
+    transition: color 0.5s;
 }
 
 .timezone-selector select {
     padding: 5px 10px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--clock-border-color, #ddd);
     border-radius: 15px;
-    background-color: white;
+    background-color: var(--clock-bg-color, white);
+    color: var(--text-color, #333);
     font-size: 0.9em;
     cursor: pointer;
     outline: none;
+    transition: background-color 0.5s, color 0.5s, border-color 0.5s;
 }
 
 .timezone-selector select:hover {
-    border-color: #aaa;
+    border-color: var(--button-bg-color, #aaa);
 }
 
 .timezone-selector select:focus {
-    border-color: #2196F3;
-    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+    border-color: var(--button-bg-color, #2196F3);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--button-bg-color, #2196F3) 30%, transparent);
 }
 
 .switch {
@@ -236,11 +270,11 @@ body, html {
 }
 
 input:checked + .slider {
-    background-color: #2196F3;
+    background-color: var(--button-bg-color, #2196F3);
 }
 
 input:focus + .slider {
-    box-shadow: 0 0 1px #2196F3;
+    box-shadow: 0 0 1px var(--button-bg-color, #2196F3);
 }
 
 input:checked + .slider:before {
@@ -258,90 +292,41 @@ input:checked + .slider:before {
     border-radius: 50%;
 }
 
-/* Analog Clock Styles */
-#analog-clock-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    /* width: 300px; /* Adjust size as needed */ /* Removed to allow clock to define its own size based on content/border */
-    /* height: 300px; /* Adjust size as needed */ /* Removed */
-}
-
-#analog-clock {
-    width: 250px; /* Adjusted size */
-    height: 250px; /* Adjusted size */
-    border: 8px solid #000; /* Thicker black border */
-    border-radius: 50%;
-    position: relative;
-    background-color: #fff; /* White face */
-    box-shadow: 0 0 20px rgba(0,0,0,0.3);
-}
-
-/* NEW Styles for HTML Clock Markers */
+/* Styles for Markers, directly inside analog-clock, so they inherit from its vars or override */
 .marker {
     position: absolute;
-    background-color: #333;
-    width: 2px; /* Default for minute markers */
-    height: 8px; /* Default for minute markers */
+    background-color: var(--analog-marker-color, #333);
+    width: 2px;
+    height: 8px;
     left: 50%;
     top: 50%;
-    transform-origin: 0 0; /* Rotate around the center of the clock */
-    /* transform: translateX(-50%); Will be set by inline style */
+    transform-origin: 0 0;
+    transition: background-color 0.5s;
 }
 
 .hour-marker {
-    background-color: #000;
+    background-color: var(--analog-hour-marker-color, #000);
     width: 4px;
     height: 15px;
 }
 
-/* Adjust translateY in inline styles if clock size (250px) changes. (110px is approx 250px/2 - marker_height/2) */
+/* Removed #analog-clock-container and #analog-clock as they are templates now */
+/* Specific styling for digital-clock within template is already covered by .digital-clock */
+/* Specific styling for analog-clock within template is already covered by .analog-clock */
 
-.hand {
-    width: 50%;
-    /* height: 6px; */ /* Height will be specific to each hand */
-    background: black;
-    position: absolute;
-    top: 50%;
-    transform-origin: 100%;
-    transform: translateY(-50%) rotate(90deg); /* Initial position pointing to 12 */
-    transition: transform 0.05s; /* Smoother second hand transition */
-    /* transition-timing-function: cubic-bezier(0.1, 2.7, 0.58, 1); // Removed for default ease-in-out like */
+/* Add a theme button to index.html controls */
+.theme-button {
+    padding: 8px 15px;
+    background-color: var(--button-bg-color, #007bff);
+    color: var(--button-text-color, white);
+    text-decoration: none;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s, color 0.3s;
 }
 
-.hour-hand {
-    background: #000; /* Black */
-    width: 30%; /* Shorter and thicker */
-    left: 20%; 
-    height: 10px; /* Thicker */
-    z-index: 3;
-}
-
-.minute-hand {
-    background: #333; /* Dark grey/black */
-    width: 40%; /* Longer than hour hand */
-    left: 10%;
-    height: 7px; /* Thinner than hour hand but thicker than second */
-    z-index: 2;
-}
-
-.second-hand {
-    background: red;
-    width: 45%; /* Longest hand */
-    left: 5%;
-    height: 3px; /* Thinnest */
-    z-index: 1;
-}
-
-.center-dot {
-    width: 12px; /* Slightly larger */
-    height: 12px; /* Slightly larger */
-    background: red; /* Red to match second hand or prominent color */
-    border: 2px solid #fff; /* White border for definition */
-    border-radius: 50%;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 4; /* Above all hands */
+.theme-button:hover {
+    background-color: color-mix(in srgb, var(--button-bg-color, #007bff) 85%, black);
 } 
