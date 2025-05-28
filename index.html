@@ -5,11 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Clock</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="clock-container">
-        <div id="clock"></div>
+    <div class="toggle-container">
+        <label class="switch">
+            <input type="checkbox" id="clock-toggle">
+            <span class="slider round"></span>
+        </label>
+        <span>Analog / Digital</span>
     </div>
+
+    <div id="clock-container">
+        <div id="digital-clock"></div>
+    </div>
+
+    <div id="analog-clock-container" style="display: none;">
+        <div id="analog-clock">
+            <div class="hand hour-hand" id="hour-hand"></div>
+            <div class="hand minute-hand" id="minute-hand"></div>
+            <div class="hand second-hand" id="second-hand"></div>
+            <div class="center-dot"></div>
+            <!-- Clock Markers -->
+            <div class="marker hour-marker" style="transform: rotate(0deg) translateY(-110px);"></div>
+            <div class="marker" style="transform: rotate(6deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(12deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(18deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(24deg) translateY(-117px);"></div>
+            <div class="marker hour-marker" style="transform: rotate(30deg) translateY(-110px);"></div>
+            <div class="marker" style="transform: rotate(36deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(42deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(48deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(54deg) translateY(-117px);"></div>
+            <div class="marker hour-marker" style="transform: rotate(60deg) translateY(-110px);"></div>
+            <div class="marker" style="transform: rotate(66deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(72deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(78deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(84deg) translateY(-117px);"></div>
+            <div class="marker hour-marker" style="transform: rotate(90deg) translateY(-110px);"></div>
+            <div class="marker" style="transform: rotate(96deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(102deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(108deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(114deg) translateY(-117px);"></div>
+            <div class="marker hour-marker" style="transform: rotate(120deg) translateY(-110px);"></div>
+            <div class="marker" style="transform: rotate(126deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(132deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(138deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(144deg) translateY(-117px);"></div>
+            <div class="marker hour-marker" style="transform: rotate(150deg) translateY(-110px);"></div>
+            <div class="marker" style="transform: rotate(156deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(162deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(168deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(174deg) translateY(-117px);"></div>
+            <div class="marker hour-marker" style="transform: rotate(180deg) translateY(-110px);"></div>
+            <div class="marker" style="transform: rotate(186deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(192deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(198deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(204deg) translateY(-117px);"></div>
+            <div class="marker hour-marker" style="transform: rotate(210deg) translateY(-110px);"></div>
+            <div class="marker" style="transform: rotate(216deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(222deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(228deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(234deg) translateY(-117px);"></div>
+            <div class="marker hour-marker" style="transform: rotate(240deg) translateY(-110px);"></div>
+            <div class="marker" style="transform: rotate(246deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(252deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(258deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(264deg) translateY(-117px);"></div>
+            <div class="marker hour-marker" style="transform: rotate(270deg) translateY(-110px);"></div>
+            <div class="marker" style="transform: rotate(276deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(282deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(288deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(294deg) translateY(-117px);"></div>
+            <div class="marker hour-marker" style="transform: rotate(300deg) translateY(-110px);"></div>
+            <div class="marker" style="transform: rotate(306deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(312deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(318deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(324deg) translateY(-117px);"></div>
+            <div class="marker hour-marker" style="transform: rotate(330deg) translateY(-110px);"></div>
+            <div class="marker" style="transform: rotate(336deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(342deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(348deg) translateY(-117px);"></div>
+            <div class="marker" style="transform: rotate(354deg) translateY(-117px);"></div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html> 
