@@ -23,6 +23,7 @@ const timerColorPicker = document.getElementById('timer-color');
 let clocks = [];
 let currentTimezone = 'local';
 let isAnalogView = false;
+let isAmPmView = false;
 let clockIntervalId = null;
 let timerIntervalId = null;
 let clockElement = null; // The main clock element
@@ -249,10 +250,20 @@ function updateClocks() {
         // Update digital clock
         const digitalClock = clockElement.querySelector('.digital-clock');
         if (digitalClock) {
-            const hours = String(time.hours).padStart(2, '0');
+            let hours = time.hours;
             const minutes = String(time.minutes).padStart(2, '0');
             const seconds = String(time.seconds).padStart(2, '0');
-            digitalClock.textContent = `${hours}:${minutes}:${seconds}`;
+            
+            if (isAmPmView) {
+                // Convert to 12-hour format
+                const period = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12; // Convert 0 to 12 for 12 AM
+                digitalClock.textContent = `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${period}`;
+            } else {
+                // 24-hour format
+                hours = String(hours).padStart(2, '0');
+                digitalClock.textContent = `${hours}:${minutes}:${seconds}`;
+            }
         }
         
         // Update analog clock
@@ -476,6 +487,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set up event listeners
     if (clockToggle) {
         clockToggle.addEventListener('change', toggleView);
+    }
+    
+    // AM/PM toggle event listener
+    const timeFormatToggle = document.getElementById('time-format-toggle');
+    if (timeFormatToggle) {
+        timeFormatToggle.addEventListener('change', function() {
+            isAmPmView = this.checked;
+            updateClocks(); // Update clocks immediately
+        });
     }
     
     // Mode switching
