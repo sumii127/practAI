@@ -34,6 +34,20 @@ let timerEndTime = 0;
 let timerRemainingTime = 0;
 let timerColor = '#2196F3';
 
+// Function to save clocks to localStorage
+function saveClocksToLocalStorage() {
+    localStorage.setItem('userClocks', JSON.stringify(clocks));
+}
+
+// Function to load clocks from localStorage
+function loadClocksFromLocalStorage() {
+    const storedClocks = localStorage.getItem('userClocks');
+    if (storedClocks) {
+        return JSON.parse(storedClocks);
+    }
+    return []; // Return empty array if nothing is stored or on first load
+}
+
 // Timezone data with display names
 const timezoneData = [
     { id: 'local', name: 'Local Time' },
@@ -139,43 +153,65 @@ function getTimezoneDisplayName(timezoneId) {
 function createClockElement(timezone) {
     if (!clockTemplate) return null;
     
-    const clockElement = clockTemplate.cloneNode(true);
-    clockElement.id = '';
-    clockElement.style.display = 'block';
+    const clockElementInstance = clockTemplate.cloneNode(true);
+    clockElementInstance.id = '';
+    // clockElementInstance.style.display = 'block'; // This is for the wrapper, should be fine
     
     const timezoneName = getTimezoneDisplayName(timezone);
-    const timezoneElement = clockElement.querySelector('.timezone-name');
+    const timezoneElement = clockElementInstance.querySelector('.timezone-name');
     if (timezoneElement) {
         timezoneElement.textContent = timezoneName;
     }
     
     // Set data attribute for identification
-    clockElement.dataset.timezone = timezone;
+    clockElementInstance.dataset.timezone = timezone;
     
     // Add remove button handler
-    const removeButton = clockElement.querySelector('.remove-clock');
+    const removeButton = clockElementInstance.querySelector('.remove-clock');
     if (removeButton) {
         removeButton.addEventListener('click', () => removeClock(timezone));
     }
+
+    // --- Issue 1 Fix: Set initial view based on isAnalogView --- 
+    const analogPart = clockElementInstance.querySelector('.analog-clock');
+    const digitalPart = clockElementInstance.querySelector('.digital-clock');
+
+    if (analogPart && digitalPart) {
+        if (isAnalogView) {
+            digitalPart.style.display = 'none';
+            analogPart.style.display = 'block';
+        } else {
+            digitalPart.style.display = 'block';
+            analogPart.style.display = 'none';
+        }
+    }
+    // Ensure the clock wrapper itself is visible
+    clockElementInstance.style.display = 'block';
+    // --- End of Issue 1 Fix ---
     
-    return clockElement;
+    return clockElementInstance;
 }
 
 // Add a new clock
 function addClock(timezone) {
-    if (clocks.includes(timezone)) return; // Don't add duplicate timezones
+    // Simplified duplicate check: if clock timezone already in our list, don't add again.
+    if (clocks.includes(timezone)) {
+        return; 
+    }
     
-    const clockElement = createClockElement(timezone);
-    if (!clockElement) return;
+    const newClockElement = createClockElement(timezone);
+    if (!newClockElement) return;
     
-    clocksContainer.appendChild(clockElement);
-    clocks.push(timezone);
+    if (clocksContainer) {
+        clocksContainer.appendChild(newClockElement);
+    }
+    if (!clocks.includes(timezone)) { // Add to array only if not already there
+        clocks.push(timezone);
+    }
     
-    // Update the select to show the next available timezone
-    updateTimezoneSelect();
-    
-    // Update immediately
-    updateClocks();
+    saveClocksToLocalStorage(); // Save after adding
+    updateTimezoneSelect(); 
+    updateClocks(); 
 }
 
 // Remove a clock
@@ -183,17 +219,18 @@ function removeClock(timezone) {
     const index = clocks.indexOf(timezone);
     if (index === -1) return;
     
-    // Remove from array
-    clocks.splice(index, 1);
+    clocks.splice(index, 1); // Remove from array
+    saveClocksToLocalStorage(); // Save after removing
     
     // Remove from DOM
-    const clockElement = document.querySelector(`[data-timezone="${timezone}"]`);
-    if (clockElement) {
-        clockElement.remove();
+    if (clocksContainer) {
+        const clockElementInstance = clocksContainer.querySelector(`[data-timezone="${timezone}"]`);
+        if (clockElementInstance) {
+            clockElementInstance.remove();
+        }
     }
     
-    // Update the select options
-    updateTimezoneSelect();
+    updateTimezoneSelect(); // Update the select options
 }
 
 // Update the timezone select to only show available timezones
@@ -238,17 +275,21 @@ function updateTimezoneSelect() {
 
 // Update all clocks
 function updateClocks() {
-    if (clocks.length === 0) return;
+    if (clocks.length === 0 && currentMode === 'clock') {
+        // If in clock mode and no clocks, perhaps clear the container or show a message
+        // For now, just return to prevent errors if clocksContainer is unexpectedly empty
+        if(clocksContainer) clocksContainer.innerHTML = ''; // Clear if no clocks to display
+        return;
+    }
     
     clocks.forEach(timezone => {
-        const clockElement = document.querySelector(`[data-timezone="${timezone}"]`);
-        if (!clockElement) return;
+        // Ensure we are selecting from the clocksContainer for multi-clock safety
+        const clockElementToUpdate = clocksContainer ? clocksContainer.querySelector(`[data-timezone="${timezone}"]`) : null;
+        if (!clockElementToUpdate) return;
         
-        // Get time for this timezone
         const time = getTimeInTimezone(timezone);
         
-        // Update digital clock
-        const digitalClock = clockElement.querySelector('.digital-clock');
+        const digitalClock = clockElementToUpdate.querySelector('.digital-clock');
         if (digitalClock) {
             let hours = time.hours;
             const minutes = String(time.minutes).padStart(2, '0');
@@ -267,7 +308,7 @@ function updateClocks() {
         }
         
         // Update analog clock
-        const analogClock = clockElement.querySelector('.analog-clock');
+        const analogClock = clockElementToUpdate.querySelector('.analog-clock');
         if (analogClock) {
             const hours = time.hours % 12;
             const minutes = time.minutes;
@@ -306,38 +347,47 @@ function toggleView() {
             }
         }
     });
-    
-    // Update immediately after toggling
-    updateClocks();
 }
 
 // Switch between clock and timer modes
 function switchMode(mode) {
-    if (mode === currentMode) return;
+    console.log(`switchMode called with mode: ${mode}. Current mode is: ${currentMode}`); // DEBUG
+    if (mode === currentMode) {
+        console.log('switchMode: Mode is already current, returning.'); // DEBUG
+        return;
+    }
     
     currentMode = mode;
+    console.log(`switchMode: currentMode changed to: ${currentMode}`); // DEBUG
     
-    // Update mode buttons
+    // Update mode buttons appearance
     if (clockModeBtn) clockModeBtn.classList.toggle('active', mode === 'clock');
     if (timerModeBtn) timerModeBtn.classList.toggle('active', mode === 'timer');
     
-    // Show/hide containers
+    // Show/hide main containers
     if (clocksContainer) clocksContainer.style.display = mode === 'clock' ? 'flex' : 'none';
     if (timerContainer) timerContainer.style.display = mode === 'timer' ? 'flex' : 'none';
     
-    // Start/stop appropriate intervals
     if (mode === 'clock') {
-        // Start clock updates
+        if (clocks.length === 0) {
+            addClock('local');
+        }
         if (!clockIntervalId) {
             clockIntervalId = setInterval(updateClocks, 1000);
-            updateClocks();
+            updateClocks(); // Initial update for clocks
         }
-    } else {
-        // Stop clock updates to save resources
+        toggleView(); // Apply current analog/digital view for clocks
+    } else { // mode === 'timer'
         if (clockIntervalId) {
             clearInterval(clockIntervalId);
             clockIntervalId = null;
         }
+        // Initialize or update timer display and buttons when switching to timer mode
+        if (timerDisplay && !timerRunning && !timerPaused) { // Reset to 00:00:00 if not active
+             timerDisplay.textContent = '00:00:00';
+             timerDisplay.style.color = timerColor;
+        }
+        updateTimerButtons(); // Ensure timer buttons are in correct state
     }
 }
 
@@ -478,12 +528,48 @@ function setTimerColor(color) {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize timezone select
     initializeTimezoneSelect();
-    
-    // Add default clock (local time)
-    addClock('local');
-    
+
+    // Create and Add timezone button ONCE after initializing the select
+    const addButton = document.createElement('button');
+    addButton.textContent = 'Add Timezone';
+    addButton.className = 'add-timezone'; 
+    addButton.addEventListener('click', () => {
+        if (timezoneSelect && timezoneSelect.value) {
+            addClock(timezoneSelect.value);
+        }
+    });
+
+    if (timezoneSelect && timezoneSelect.parentNode) {
+        if (timezoneSelect.nextSibling) {
+            timezoneSelect.parentNode.insertBefore(addButton, timezoneSelect.nextSibling);
+        } else {
+            timezoneSelect.parentNode.appendChild(addButton);
+        }
+    } else {
+        console.error("Could not find parentNode for timezoneSelect to attach Add button.");
+    }
+
+    let localClockPresent = false;
+    const loadedClocks = loadClocksFromLocalStorage();
+
+    if (loadedClocks.length > 0) {
+        clocks = []; // Start with a fresh clocks array for re-population
+        loadedClocks.forEach(tz => {
+            addClock(tz); // addClock will handle DOM and internal array `clocks`
+            if (tz === 'local') {
+                localClockPresent = true;
+            }
+        });
+    } else {
+        clocks = []; // Ensure clocks array is empty if nothing is loaded
+    }
+
+    // If 'local' clock was not among the loaded clocks, add it now.
+    if (!localClockPresent) {
+        addClock('local');
+    }
+
     // Set up event listeners
     if (clockToggle) {
         clockToggle.addEventListener('change', toggleView);
@@ -500,11 +586,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Mode switching
     if (clockModeBtn) {
-        clockModeBtn.addEventListener('click', () => switchMode('clock'));
+        clockModeBtn.addEventListener('click', () => {
+            console.log('Clock mode button clicked'); // DEBUG
+            switchMode('clock');
+        });
     }
     
     if (timerModeBtn) {
-        timerModeBtn.addEventListener('click', () => switchMode('timer'));
+        timerModeBtn.addEventListener('click', () => {
+            console.log('Timer mode button clicked'); // DEBUG
+            switchMode('timer');
+        });
     }
     
     // Timer controls
@@ -530,19 +622,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Start the clock updates
-    if (clockIntervalId) clearInterval(clockIntervalId);
-    clockIntervalId = setInterval(updateClocks, 1000);
-    
-    // Initial update
-    updateClocks();
-    toggleView();
-    
-    // Initialize timer buttons
-    updateTimerButtons();
-    
     // Set initial mode
-    switchMode('clock');
+    switchMode('clock'); 
+
+    // updateTimerButtons() is called within switchMode when mode becomes timer,
+    // and also after timer operations. Initial call if starting in timer mode is handled by switchMode.
 });
 
 // Add some styles for the add button
