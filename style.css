@@ -10,13 +10,17 @@ body, html {
 
 /* Clocks Container */
 #clocks-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
     gap: 20px;
     padding: 20px;
     width: 100%;
     max-width: 1400px;
-    margin: 0 auto;
+    margin: 20px auto;
+    min-height: 300px;
 }
 
 .clock-wrapper {
