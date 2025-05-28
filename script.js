@@ -3,10 +3,12 @@ const clocksContainer = document.getElementById('clocks-container');
 const clockTemplate = document.getElementById('analog-clock-template');
 const timezoneSelect = document.getElementById('timezone');
 const clockToggle = document.getElementById('clock-toggle');
+const timeFormatToggle = document.getElementById('time-format-toggle');
 
 // State
 let clocks = [];
 let isAnalogView = false;
+let isAmPmView = false;
 let intervalId = null;
 
 // Timezone data with display names
@@ -54,10 +56,22 @@ function initializeTimezoneSelect() {
 function getTimeInTimezone(timezone) {
     const now = new Date();
     if (timezone === 'local') {
+        let hours = now.getHours();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        let ampm = hours >= 12 ? 'PM' : 'AM';
+
+        if (isAmPmView) {
+            hours = hours % 12;
+            hours = hours ? hours : 12; // Convert 0 to 12 (for 12 AM/PM)
+        }
+        // For military time, hours remain 0-23 from now.getHours()
+
         return {
-            hours: now.getHours(),
-            minutes: now.getMinutes(),
-            seconds: now.getSeconds(),
+            hours: hours,
+            minutes: minutes,
+            seconds: seconds,
+            ampm: isAmPmView ? ampm : '', // Only return ampm if in AM/PM view
             date: now
         };
     }
@@ -65,8 +79,8 @@ function getTimeInTimezone(timezone) {
     try {
         const options = {
             timeZone: timezone === 'UTC' ? 'UTC' : timezone,
-            hour12: false,
-            hour: '2-digit',
+            hour12: isAmPmView,
+            hour: isAmPmView ? 'numeric' : '2-digit', // 'numeric' for 1-12, '2-digit' for 00-23
             minute: '2-digit',
             second: '2-digit'
         };
@@ -74,23 +88,27 @@ function getTimeInTimezone(timezone) {
         const formatter = new Intl.DateTimeFormat('en-US', options);
         const parts = formatter.formatToParts(now);
         
-        // Extract time components from the formatted parts
         const timeParts = {};
+        let ampm = '';
         parts.forEach(part => {
             if (part.type === 'hour') timeParts.hours = parseInt(part.value);
             if (part.type === 'minute') timeParts.minutes = parseInt(part.value);
             if (part.type === 'second') timeParts.seconds = parseInt(part.value);
+            if (part.type === 'dayPeriod') ampm = part.value;
         });
         
-        // Create a date object with the same date but different time
         const localDate = new Date(now);
-        localDate.setHours(timeParts.hours || 0, timeParts.minutes || 0, timeParts.seconds || 0);
-        
+        // For Intl.DateTimeFormat, hours are already correct (1-12 for AM/PM, 0-23 for military)
+        // No need to setHours here again as it might mess up the already formatted hour from `parts`
+        // especially if `timeParts.hours` is 12 PM (which is 12) or 12 AM (which is 0 for Date object but 12 for display)
+        // We will use the `timeParts.hours` directly.
+
         return {
             hours: timeParts.hours || 0,
             minutes: timeParts.minutes || 0,
             seconds: timeParts.seconds || 0,
-            date: localDate
+            ampm: isAmPmView ? ampm : '', // Only return ampm if in AM/PM view
+            date: localDate // Date object is still useful for other potential operations
         };
     } catch (e) {
         console.error('Error with timezone', timezone, e);
@@ -219,16 +237,30 @@ function updateClocks() {
         const clockElement = document.querySelector(`[data-timezone="${timezone}"]`);
         if (!clockElement) return;
         
-        // Get time for this timezone
         const time = getTimeInTimezone(timezone);
         
-        // Update digital clock
         const digitalClock = clockElement.querySelector('.digital-clock');
         if (digitalClock) {
-            const hours = String(time.hours).padStart(2, '0');
+            let hoursString;
+            if (isAmPmView) {
+                hoursString = String(time.hours); // Display 1-12 directly
+            } else {
+                // For military time, ensure original hours (0-23) are padded
+                // The getTimeInTimezone for 'local' now returns 0-23 directly if not isAmPmView.
+                // For other timezones, '2-digit' option in Intl ensures padding.
+                // However, to be safe and consistent, especially for local time military:
+                let militaryHours = time.hours;
+                if (timezone === 'local' && !isAmPmView) {
+                    // if it came from local, it's already 0-23, just pad it.
+                    // if it came from Intl, it's already padded '00'-'23' if not ampm.
+                    // So, this String(militaryHours).padStart(2, '0') is generally safe.
+                }
+                 hoursString = String(militaryHours).padStart(2, '0');
+            }
             const minutes = String(time.minutes).padStart(2, '0');
             const seconds = String(time.seconds).padStart(2, '0');
-            digitalClock.textContent = `${hours}:${minutes}:${seconds}`;
+            const ampmString = time.ampm ? ` ${time.ampm}` : ''; // time.ampm will be empty if not isAmPmView
+            digitalClock.textContent = `${hoursString}:${minutes}:${seconds}${ampmString}`;
         }
         
         // Update analog clock
@@ -276,6 +308,12 @@ function toggleView() {
     updateClocks();
 }
 
+// Toggle between AM/PM and military time
+function toggleTimeFormat() {
+    isAmPmView = timeFormatToggle && timeFormatToggle.checked;
+    updateClocks();
+}
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize timezone select
@@ -288,6 +326,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clockToggle) {
         clockToggle.addEventListener('change', () => {
             toggleView();
+        });
+    }
+    
+    if (timeFormatToggle) {
+        timeFormatToggle.addEventListener('change', () => {
+            toggleTimeFormat();
         });
     }
     
@@ -313,6 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial update
     updateClocks();
     toggleView();
+    toggleTimeFormat();
 });
 
 // Add some styles for the add button
